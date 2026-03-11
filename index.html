@@ -224,9 +224,14 @@
         <div class="detail-footer" id="detail-footer"></div>
       </div>
       <div class="number-grid" id="number-grid"></div>
-      <div class="section-title" style="margin-top:20px">Export data</div>
-      <div class="grid-note">Download your game history as a CSV for analysis in Excel or Google Sheets.</div>
+      <div class="section-title" style="margin-top:20px">Export / Import</div>
+      <div class="grid-note">Download your history as CSV, or import a CSV to merge data from another device.</div>
       <button class="btn-primary" style="width:100%;margin-bottom:8px" onclick="exportCSV()">&#8595; Download CSV</button>
+      <label class="btn-secondary" style="display:block;text-align:center;padding:10px;cursor:pointer;margin-bottom:4px">
+        &#8593; Import CSV
+        <input type="file" accept=".csv,text/csv" style="display:none" onchange="importCSV(this)">
+      </label>
+      <div id="import-msg" style="font-size:0.6rem;text-align:center;margin-top:6px;min-height:1em;letter-spacing:1px;"></div>
     </div>
   </div>
 </div>
@@ -750,6 +755,101 @@ function renderChart() {
   var t2 = document.createElementNS(NS, 'text'); t2.setAttribute('x',W-pad); t2.setAttribute('y',H+12);
   t2.setAttribute('fill','#888'); t2.setAttribute('font-size','8'); t2.setAttribute('text-anchor','end'); t2.setAttribute('font-family','IBM Plex Mono,monospace');
   t2.textContent = recent[n-1].date.slice(0,5); svg.appendChild(t2);
+}
+
+function importCSV(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var msg = document.getElementById('import-msg');
+    try {
+      var text = e.target.result;
+      var lines = text.split(/\r?\n/);
+
+      // Parse GAMES SUMMARY section
+      var gameStart = -1, throwStart = -1;
+      for (var i = 0; i < lines.length; i++) {
+        if (lines[i].trim() === 'GAMES SUMMARY') gameStart = i + 1;
+        if (lines[i].trim() === 'THROW DETAIL') throwStart = i + 1;
+      }
+      if (gameStart === -1) { msg.style.color='#cc2200'; msg.textContent = 'Error: not a valid RTW export file.'; return; }
+
+      function parseCSVRow(row) {
+        // Handle quoted fields
+        var result = [], cur = '', inQ = false;
+        for (var ci = 0; ci < row.length; ci++) {
+          var ch = row[ci];
+          if (ch === '"') { inQ = !inQ; }
+          else if (ch === ',' && !inQ) { result.push(cur.trim()); cur = ''; }
+          else { cur += ch; }
+        }
+        result.push(cur.trim());
+        return result;
+      }
+
+      // Read game rows (skip header line)
+      var gameEnd = throwStart !== -1 ? throwStart - 2 : lines.length;
+      var gameMap = {};
+      for (var gi = gameStart + 1; gi < gameEnd; gi++) {
+        var row = lines[gi].trim();
+        if (!row) continue;
+        var cols = parseCSVRow(row);
+        if (cols.length < 4) continue;
+        var id = parseInt(cols[0]);
+        if (isNaN(id)) continue;
+        gameMap[id] = {
+          id: id,
+          date: cols[1],
+          time: cols[2],
+          darts: parseInt(cols[3]),
+          comment: cols[4] || '',
+          log: []
+        };
+      }
+
+      // Read throw rows (skip header line)
+      if (throwStart !== -1) {
+        for (var ti = throwStart + 1; ti < lines.length; ti++) {
+          var trow = lines[ti].trim();
+          if (!trow) continue;
+          var tc = parseCSVRow(trow);
+          if (tc.length < 6) continue;
+          var tid = parseInt(tc[0]);
+          if (isNaN(tid) || !gameMap[tid]) continue;
+          var dartNum = parseInt(tc[3]);
+          gameMap[tid].log.push({ dartNum: dartNum, target: tc[4], type: tc[5] });
+        }
+      }
+
+      // Merge: skip any game_id already in local scores
+      var existingIds = {};
+      scores.forEach(function(s) { existingIds[s.id] = true; });
+      var imported = 0, skipped = 0;
+      Object.keys(gameMap).forEach(function(k) {
+        var g = gameMap[k];
+        if (existingIds[g.id]) { skipped++; return; }
+        scores.push(g);
+        imported++;
+      });
+
+      // Sort by id (chronological)
+      scores.sort(function(a, b) { return a.id - b.id; });
+      persistScores();
+      updateStats();
+      renderProgress();
+
+      msg.style.color = '#1a9e50';
+      msg.textContent = imported + ' game' + (imported !== 1 ? 's' : '') + ' imported' +
+        (skipped ? ', ' + skipped + ' duplicate' + (skipped !== 1 ? 's' : '') + ' skipped' : '') + '.';
+    } catch(err) {
+      var msg = document.getElementById('import-msg');
+      msg.style.color = '#cc2200';
+      msg.textContent = 'Error reading file: ' + err.message;
+    }
+    input.value = ''; // reset so same file can be re-selected
+  };
+  reader.readAsText(file);
 }
 
 function exportCSV() {
