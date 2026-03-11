@@ -10,7 +10,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    :root { --bg-page:#f0f0f0; --bg-card:#ffffff; --bg-subtle:#f5f5f5; --bg-subtle2:#e8e8e8; --text:#1a1a1a; --muted:#888888; --red:#cc2200; --red-light:#e03318; --green-pb:#1a9e50; }
+    :root {
+      --bg-page:#f0f0f0; --bg-card:#ffffff; --bg-subtle:#f5f5f5;
+      --bg-subtle2:#e8e8e8; --text:#1a1a1a; --muted:#888888;
+      --red:#cc2200; --red-light:#e03318; --green-pb:#1a9e50;
+    }
     * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
     body { background:var(--bg-page); font-family:'IBM Plex Mono',monospace; color:var(--text); min-height:100vh; }
     .app { max-width:480px; margin:0 auto; padding-bottom:80px; min-height:100vh; background:var(--bg-card); box-shadow:0 0 40px rgba(0,0,0,0.12); }
@@ -36,7 +40,7 @@
     .dart-panel { background:var(--bg-subtle); border:2px solid var(--bg-subtle2); border-radius:8px; padding:16px; margin-bottom:14px; }
     .panel-label { font-size:0.6rem; letter-spacing:3px; color:var(--muted); text-transform:uppercase; margin-bottom:10px; }
     .current-target-display { font-family:'Bebas Neue',sans-serif; font-size:3rem; color:var(--red); line-height:1; margin-bottom:4px; }
-    .throw-buttons { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:8px; }
+    .throw-buttons { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:8px; margin-bottom:8px; }
     .throw-btn { padding:16px 4px; border:2px solid; border-radius:6px; font-family:'IBM Plex Mono',monospace; font-size:0.7rem; font-weight:600; letter-spacing:1px; cursor:pointer; transition:all 0.15s; text-transform:uppercase; }
     .throw-btn:active { transform:scale(0.94); }
     .btn-miss { background:transparent; border-color:var(--muted); color:var(--muted); }
@@ -47,8 +51,8 @@
     .btn-double:active { background:rgba(204,34,0,0.22); }
     .btn-treble { background:rgba(204,34,0,0.18); border-color:var(--red); color:var(--red); }
     .btn-treble:active { background:rgba(204,34,0,0.32); }
-    .btn-undo { background:transparent; border-color:var(--muted); color:var(--muted); width:100%; margin-top:8px; }
-    .btn-undo:active { background:rgba(0,0,0,0.06); }
+    .btn-undo { width:100%; padding:12px; background:transparent; border:2px solid var(--muted); border-radius:6px; color:var(--muted); font-family:'IBM Plex Mono',monospace; font-size:0.65rem; font-weight:600; letter-spacing:1px; cursor:pointer; text-transform:uppercase; transition:all 0.15s; }
+    .btn-undo:active { background:rgba(0,0,0,0.06); transform:scale(0.97); }
     .action-row { display:flex; gap:8px; margin-bottom:14px; }
     .btn-secondary { flex:1; padding:10px; background:transparent; border:1px solid var(--bg-subtle2); border-radius:6px; color:var(--muted); font-family:'IBM Plex Mono',monospace; font-size:0.65rem; letter-spacing:1px; cursor:pointer; transition:all 0.2s; text-transform:uppercase; }
     .btn-secondary:hover { border-color:var(--red); color:var(--red); }
@@ -91,22 +95,18 @@
     .chart-title { font-size:0.6rem; letter-spacing:3px; color:var(--muted); text-transform:uppercase; margin-bottom:12px; }
     .chart-note { font-size:0.6rem; color:var(--muted); margin-top:8px; }
     #chart-svg { width:100%; overflow:visible; display:block; }
-    .section-title { font-size:0.6rem; letter-spacing:3px; color:var(--muted); text-transform:uppercase; margin-bottom:10px; }
+    .section-title { font-size:0.6rem; letter-spacing:3px; color:var(--muted); text-transform:uppercase; margin:14px 0 8px; }
+    .grid-note { font-size:0.58rem; color:var(--muted); margin-bottom:12px; }
     .number-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:8px; }
     .number-tile { background:var(--bg-subtle); border:1px solid var(--bg-subtle2); border-radius:8px; padding:10px 6px; text-align:center; cursor:pointer; transition:border-color 0.15s; }
     .number-tile:hover { border-color:var(--red); }
+    .number-tile.active-tile { border-color:var(--red); background:rgba(204,34,0,0.04); }
     .tile-num { font-family:'Bebas Neue',sans-serif; font-size:1.4rem; color:var(--red); line-height:1; }
     .tile-avg { font-size:0.55rem; color:var(--muted); margin-top:2px; }
     .tile-bar { height:3px; border-radius:2px; margin-top:6px; background:var(--bg-subtle2); }
     .tile-bar-fill { height:100%; background:var(--red); border-radius:2px; }
     .number-tile.no-data { opacity:0.4; cursor:default; }
     .number-tile.no-data:hover { border-color:var(--bg-subtle2); }
-    .number-tile.tile-best { background:#f0f8f3; border-color:#a8d9b8; }
-    .number-tile.tile-best .tile-num { color:#1a9e50; }
-    .number-tile.tile-best .tile-bar-fill { background:#1a9e50; }
-    .number-tile.tile-worst { background:#fdf3f0; border-color:#f0bfb4; }
-    .number-tile.tile-worst .tile-num { color:#cc2200; }
-    .grid-note { font-size:0.58rem; color:var(--muted); margin-bottom:14px; }
     .detail-panel { display:none; background:var(--bg-subtle); border:2px solid var(--red); border-radius:10px; padding:16px; margin-bottom:14px; }
     .detail-panel.visible { display:block; }
     .detail-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
@@ -121,7 +121,7 @@
     .hit-type-val { font-family:'Bebas Neue',sans-serif; font-size:1.6rem; line-height:1; }
     .hit-type-lbl { font-size:0.5rem; letter-spacing:1px; color:var(--muted); text-transform:uppercase; margin-top:2px; }
     .hit-single { color:var(--text); } .hit-double { color:var(--red); } .hit-treble { color:var(--red-light); }
-    .detail-pct { font-size:0.6rem; color:var(--muted); text-align:center; padding:4px 0; }
+    .detail-footer { font-size:0.6rem; color:var(--muted); text-align:center; line-height:1.8; padding-top:4px; border-top:1px solid var(--bg-subtle2); }
   </style>
 </head>
 <body>
@@ -154,7 +154,9 @@
           <button class="throw-btn btn-double" onclick="recordThrow('double')">Double</button>
           <button class="throw-btn btn-treble" onclick="recordThrow('treble')">Treble</button>
         </div>
-        <button class="throw-btn btn-undo" id="undo-btn" onclick="undoThrow()" style="display:none">&#8592; Undo Last Throw</button>
+        <div id="undo-wrap" style="display:none;margin-top:8px">
+          <button class="btn-undo" onclick="undoThrow()">&#8592; Undo Last Throw</button>
+        </div>
       </div>
       <div id="start-area" style="text-align:center">
         <button class="btn-primary btn-start" onclick="startGame()" id="start-btn">Start Game</button>
@@ -183,14 +185,15 @@
         <div class="chart-note">Lower is better &#183; <span style="color:var(--green-pb)">&#9679;</span> Personal best &#183; dashed = trend</div>
       </div>
       <div class="section-title">Performance by number</div>
+      <div class="grid-note">Tap a number to see details. Only shows data from games with full throw logs.</div>
       <div class="detail-panel" id="detail-panel">
         <div class="detail-header">
           <div class="detail-title" id="detail-title">1</div>
           <button class="detail-close" onclick="closeDetail()">&#10005; Close</button>
         </div>
         <div class="detail-stats">
-          <div class="detail-stat"><div class="detail-stat-val" id="detail-attempts">&#8212;</div><div class="detail-stat-lbl">Attempts</div></div>
-          <div class="detail-stat"><div class="detail-stat-val" id="detail-avg">&#8212;</div><div class="detail-stat-lbl">Avg throws</div></div>
+          <div class="detail-stat"><div class="detail-stat-val" id="detail-games">&#8212;</div><div class="detail-stat-lbl">Games</div></div>
+          <div class="detail-stat"><div class="detail-stat-val" id="detail-avg">&#8212;</div><div class="detail-stat-lbl">Avg darts</div></div>
           <div class="detail-stat"><div class="detail-stat-val" id="detail-best">&#8212;</div><div class="detail-stat-lbl">Best</div></div>
         </div>
         <div class="hit-breakdown">
@@ -198,10 +201,9 @@
           <div class="hit-type"><div class="hit-type-val hit-double" id="detail-doubles">&#8212;</div><div class="hit-type-lbl">Doubles</div></div>
           <div class="hit-type"><div class="hit-type-val hit-treble" id="detail-trebles">&#8212;</div><div class="hit-type-lbl">Trebles</div></div>
         </div>
-        <div class="detail-pct" id="detail-pct"></div>
+        <div class="detail-footer" id="detail-footer"></div>
       </div>
       <div class="number-grid" id="number-grid"></div>
-      <div class="grid-note">Tap a number to see details. Only available for games with full throw data.</div>
     </div>
   </div>
 </div>
@@ -236,302 +238,350 @@ var gameActive = false;
 var idx = 0;
 var darts = 0;
 var dartLog = [];
-var throwHistory = [];
+var undoStack = [];
 var expandedId = null;
+var activeDetailNum = null;
 
 function showTab(name) {
-  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('visible');});
-  document.querySelectorAll('.nav button').forEach(function(b){b.classList.remove('active');});
-  document.getElementById('tab-'+name).classList.add('visible');
-  var btns = document.querySelectorAll('.nav button');
-  ['game','history','progress'].forEach(function(n,i){ if(n===name) btns[i].classList.add('active'); });
-  if(name==='history') renderHistory();
-  if(name==='progress') renderProgress();
+  var tabs = document.querySelectorAll('.tab');
+  for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('visible');
+  var navBtns = document.querySelectorAll('.nav button');
+  for (var j = 0; j < navBtns.length; j++) navBtns[j].classList.remove('active');
+  document.getElementById('tab-' + name).classList.add('visible');
+  var names = ['game','history','progress'];
+  for (var k = 0; k < names.length; k++) {
+    if (names[k] === name) navBtns[k].classList.add('active');
+  }
+  if (name === 'history') renderHistory();
+  if (name === 'progress') renderProgress();
 }
 
 function startGame() {
-  idx=0; darts=0; dartLog=[]; throwHistory=[];
-  gameActive=true;
-  document.getElementById('dart-panel').style.display='';
-  document.getElementById('start-area').style.display='none';
-  document.getElementById('abandon-row').style.display='';
-  updateUndoBtn(); renderTargets(); updateStats();
+  idx = 0; darts = 0; dartLog = []; undoStack = [];
+  gameActive = true;
+  document.getElementById('dart-panel').style.display = '';
+  document.getElementById('start-area').style.display = 'none';
+  document.getElementById('abandon-row').style.display = '';
+  document.getElementById('undo-wrap').style.display = 'none';
+  renderTargets();
+  updateStats();
 }
 
 function recordThrow(type) {
-  if(!gameActive) return;
+  if (!gameActive) return;
   var target = NUMBERS[idx];
-  var advance = type==='single'?1:type==='double'?2:type==='treble'?3:0;
+  var advance = type === 'single' ? 1 : type === 'double' ? 2 : type === 'treble' ? 3 : 0;
+  // Save snapshot for undo
+  undoStack.push({ idx: idx, darts: darts, logLen: dartLog.length });
   darts++;
-  dartLog.push({target:target, type:type, dartNum:darts});
-  throwHistory.push({idx:idx, darts:darts, dartLogLen:dartLog.length});
-  idx = Math.min(idx+advance, NUMBERS.length);
-  updateUndoBtn(); renderTargets(); updateStats();
-  if(idx>=NUMBERS.length) setTimeout(showFinishModal,300);
+  dartLog.push({ target: target, type: type, dartNum: darts });
+  idx = Math.min(idx + advance, NUMBERS.length);
+  document.getElementById('undo-wrap').style.display = '';
+  renderTargets();
+  updateStats();
+  if (idx >= NUMBERS.length) {
+    setTimeout(showFinishModal, 300);
+  }
 }
 
 function undoThrow() {
-  if(!gameActive||!throwHistory.length) return;
-  var prev = throwHistory.pop();
-  idx = prev.idx;
-  darts = prev.darts-1;
-  dartLog = dartLog.slice(0, prev.dartLogLen-1);
-  updateUndoBtn(); renderTargets(); updateStats();
+  if (!gameActive || undoStack.length === 0) return;
+  var snap = undoStack.pop();
+  idx = snap.idx;
+  darts = snap.darts;
+  dartLog = dartLog.slice(0, snap.logLen);
+  document.getElementById('undo-wrap').style.display = undoStack.length > 0 ? '' : 'none';
+  renderTargets();
+  updateStats();
 }
 
-function updateUndoBtn() {
-  document.getElementById('undo-btn').style.display = throwHistory.length?'':'none';
+function resetGameState() {
+  gameActive = false;
+  idx = 0; darts = 0; dartLog = []; undoStack = [];
+  document.getElementById('dart-panel').style.display = 'none';
+  document.getElementById('start-area').style.display = '';
+  document.getElementById('abandon-row').style.display = 'none';
+  document.getElementById('undo-wrap').style.display = 'none';
+  renderTargets();
+  updateStats();
 }
 
-function abandonGame() {
-  gameActive=false; idx=0; darts=0; dartLog=[]; throwHistory=[];
-  document.getElementById('dart-panel').style.display='none';
-  document.getElementById('start-area').style.display='';
-  document.getElementById('abandon-row').style.display='none';
-  updateUndoBtn(); renderTargets(); updateStats();
+function abandonGame() { resetGameState(); }
+
+function discardGame() {
+  document.getElementById('finish-modal').classList.add('hidden');
+  resetGameState();
+}
+
+function saveGame() {
+  var now = new Date();
+  scores.push({
+    id: Date.now(),
+    darts: darts,
+    date: now.toLocaleDateString('en-GB'),
+    time: now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+    comment: document.getElementById('modal-comment').value.trim(),
+    log: dartLog.slice()
+  });
+  persistScores();
+  document.getElementById('finish-modal').classList.add('hidden');
+  resetGameState();
+  showTab('history');
 }
 
 function renderTargets() {
   var grid = document.getElementById('targets-grid');
-  grid.innerHTML='';
-  NUMBERS.forEach(function(n,i){
-    var el=document.createElement('div');
-    var cls='target'+(n==='Bull'?' bull':'');
-    if(i<idx) cls+=' hit';
-    else if(i===idx&&gameActive) cls+=' current';
-    el.className=cls;
-    el.textContent=n==='Bull'?'BULL':n;
+  grid.innerHTML = '';
+  for (var i = 0; i < NUMBERS.length; i++) {
+    var n = NUMBERS[i];
+    var el = document.createElement('div');
+    var cls = 'target' + (n === 'Bull' ? ' bull' : '');
+    if (i < idx) cls += ' hit';
+    else if (i === idx && gameActive) cls += ' current';
+    el.className = cls;
+    el.textContent = n === 'Bull' ? 'BULL' : n;
     grid.appendChild(el);
-  });
-  var lbl=NUMBERS[idx];
-  document.getElementById('current-target-label').textContent=lbl==='Bull'?'BULL':(lbl!==undefined?lbl:'');
+  }
+  var lbl = NUMBERS[idx];
+  document.getElementById('current-target-label').textContent = lbl === 'Bull' ? 'BULL' : (lbl !== undefined ? lbl : '');
 }
 
 function updateStats() {
-  var pb=scores.length?Math.min.apply(null,scores.map(function(s){return s.darts;})):null;
-  document.getElementById('stat-darts').textContent=darts;
-  document.getElementById('stat-progress').textContent=idx+'/'+NUMBERS.length;
-  document.getElementById('stat-best').textContent=pb!==null?pb:'\u2014';
-  document.getElementById('start-btn').textContent=scores.length?'New Game':'Start Game';
+  var pb = scores.length ? Math.min.apply(null, scores.map(function(s){ return s.darts; })) : null;
+  document.getElementById('stat-darts').textContent = darts;
+  document.getElementById('stat-progress').textContent = idx + '/' + NUMBERS.length;
+  document.getElementById('stat-best').textContent = pb !== null ? pb : '\u2014';
+  document.getElementById('start-btn').textContent = scores.length ? 'New Game' : 'Start Game';
 }
 
 function showFinishModal() {
-  var pb=scores.length?Math.min.apply(null,scores.map(function(s){return s.darts;})):null;
-  document.getElementById('modal-score').textContent=darts;
-  document.getElementById('modal-comment').value='';
-  document.getElementById('pb-notice').style.display=(pb===null||darts<pb)?'':'none';
+  var pb = scores.length ? Math.min.apply(null, scores.map(function(s){ return s.darts; })) : null;
+  document.getElementById('modal-score').textContent = darts;
+  document.getElementById('modal-comment').value = '';
+  document.getElementById('pb-notice').style.display = (pb === null || darts < pb) ? '' : 'none';
   document.getElementById('finish-modal').classList.remove('hidden');
 }
 
-function discardGame() {
-  document.getElementById('finish-modal').classList.add('hidden');
-  gameActive=false; idx=0; darts=0; dartLog=[]; throwHistory=[];
-  document.getElementById('dart-panel').style.display='none';
-  document.getElementById('start-area').style.display='';
-  document.getElementById('abandon-row').style.display='none';
-  updateUndoBtn(); renderTargets(); updateStats();
-}
-
-function saveGame() {
-  var now=new Date();
-  scores.push({
-    id:Date.now(), darts:darts,
-    date:now.toLocaleDateString('en-GB'),
-    time:now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}),
-    comment:document.getElementById('modal-comment').value.trim(),
-    log:dartLog.slice()
-  });
-  persistScores();
-  document.getElementById('finish-modal').classList.add('hidden');
-  gameActive=false; idx=0; darts=0; dartLog=[]; throwHistory=[];
-  document.getElementById('dart-panel').style.display='none';
-  document.getElementById('start-area').style.display='';
-  document.getElementById('abandon-row').style.display='none';
-  updateUndoBtn(); renderTargets(); updateStats();
-  showTab('history');
-}
-
 function renderHistory() {
-  var pb=scores.length?Math.min.apply(null,scores.map(function(s){return s.darts;})):null;
-  var list=document.getElementById('history-list');
-  if(!scores.length){list.innerHTML='<div class="history-empty">No games recorded yet.<br>Play your first game!</div>';return;}
-  list.innerHTML='';
-  scores.slice().reverse().forEach(function(s){
-    var isPB=s.darts===pb, isExp=expandedId===s.id;
-    var div=document.createElement('div');
-    div.className='history-entry'+(isExp?' expanded':'');
-    var logHtml='';
-    if(s.log&&s.log.length) logHtml=s.log.map(function(e){
-      var col=e.type==='miss'?'var(--muted)':(e.type==='double'||e.type==='treble')?'var(--red)':'var(--text)';
-      var sfx=e.type==='miss'?'\u2717':e.type==='double'?'\xd72':e.type==='treble'?'\xd73':'';
-      return '<span style="margin-right:6px;color:'+col+'">'+e.target+sfx+'</span>';
-    }).join('');
-    div.innerHTML=
-      '<div class="entry-top"><div>'+
-        '<span class="entry-score'+(isPB?' pb':'')+'">'+s.darts+'</span>'+
-        '<span class="entry-darts-lbl">darts</span>'+
-        (isPB?'<span class="pb-badge">PB</span>':'')+
-      '</div><div class="entry-date"><div>'+s.date+'</div><div>'+s.time+'</div></div></div>'+
-      '<div class="entry-details'+(isExp?' visible':'')+'">'+
-        (s.comment?'<div class="entry-comment">&ldquo;'+s.comment+'&rdquo;</div>':'')+
-        '<div class="entry-log">'+logHtml+'</div>'+
-        '<button class="delete-btn" onclick="deleteScore('+s.id+',event)">Delete</button>'+
-      '</div>';
-    div.addEventListener('click',function(){toggleEntry(s.id);});
-    list.appendChild(div);
-  });
-}
-
-function toggleEntry(id){expandedId=expandedId===id?null:id;renderHistory();}
-
-function deleteScore(id,e){
-  e.stopPropagation();
-  if(!confirm('Delete this score?')) return;
-  scores=scores.filter(function(s){return s.id!==id;});
-  persistScores();
-  if(expandedId===id) expandedId=null;
-  renderHistory(); renderProgress(); updateStats();
-}
-
-function getNumberStats(target) {
-  var attempts=[], singles=0, doubles=0, trebles=0;
-  scores.forEach(function(s){
-    if(!s.log||!s.log.length) return;
-    var count=0;
-    s.log.forEach(function(e){
-      if(String(e.target)===String(target)){
-        count++;
-        if(e.type==='single'){singles++;attempts.push(count);count=0;}
-        else if(e.type==='double'){doubles++;attempts.push(count);count=0;}
-        else if(e.type==='treble'){trebles++;attempts.push(count);count=0;}
+  var pb = scores.length ? Math.min.apply(null, scores.map(function(s){ return s.darts; })) : null;
+  var list = document.getElementById('history-list');
+  if (!scores.length) {
+    list.innerHTML = '<div class="history-empty">No games recorded yet.<br>Play your first game!</div>';
+    return;
+  }
+  list.innerHTML = '';
+  var reversed = scores.slice().reverse();
+  for (var i = 0; i < reversed.length; i++) {
+    (function(s) {
+      var isPB = s.darts === pb;
+      var isExp = expandedId === s.id;
+      var div = document.createElement('div');
+      div.className = 'history-entry' + (isExp ? ' expanded' : '');
+      var logHtml = '';
+      if (s.log && s.log.length) {
+        for (var j = 0; j < s.log.length; j++) {
+          var e = s.log[j];
+          var col = e.type === 'miss' ? 'var(--muted)' : (e.type === 'double' || e.type === 'treble') ? 'var(--red)' : 'var(--text)';
+          var sfx = e.type === 'miss' ? '\u2717' : e.type === 'double' ? '\xd72' : e.type === 'treble' ? '\xd73' : '';
+          logHtml += '<span style="margin-right:6px;color:' + col + '">' + e.target + sfx + '</span>';
+        }
       }
-    });
-  });
-  if(!attempts.length) return null;
-  var avg=Math.round((attempts.reduce(function(a,b){return a+b;},0)/attempts.length)*10)/10;
-  return {attempts:attempts.length, avg:avg, best:Math.min.apply(null,attempts), singles:singles, doubles:doubles, trebles:trebles};
+      div.innerHTML =
+        '<div class="entry-top"><div>' +
+          '<span class="entry-score' + (isPB ? ' pb' : '') + '">' + s.darts + '</span>' +
+          '<span class="entry-darts-lbl">darts</span>' +
+          (isPB ? '<span class="pb-badge">PB</span>' : '') +
+        '</div><div class="entry-date"><div>' + s.date + '</div><div>' + s.time + '</div></div></div>' +
+        '<div class="entry-details' + (isExp ? ' visible' : '') + '">' +
+          (s.comment ? '<div class="entry-comment">&ldquo;' + s.comment + '&rdquo;</div>' : '') +
+          (logHtml ? '<div class="entry-log">' + logHtml + '</div>' : '<div class="entry-log" style="font-style:italic;color:var(--muted)">No throw data</div>') +
+          '<button class="delete-btn" onclick="deleteScore(' + s.id + ',event)">Delete</button>' +
+        '</div>';
+      div.addEventListener('click', function(){ toggleEntry(s.id); });
+      list.appendChild(div);
+    })(reversed[i]);
+  }
+}
+
+function toggleEntry(id) { expandedId = expandedId === id ? null : id; renderHistory(); }
+
+function deleteScore(id, e) {
+  e.stopPropagation();
+  if (!confirm('Delete this score?')) return;
+  scores = scores.filter(function(s){ return s.id !== id; });
+  persistScores();
+  if (expandedId === id) expandedId = null;
+  renderHistory();
+  renderProgress();
+  updateStats();
+}
+
+// Compute per-number stats from all games that have throw logs
+function getNumberStats(target) {
+  var dartsPerGame = [];
+  var singles = 0, doubles = 0, trebles = 0, totalMisses = 0;
+  for (var i = 0; i < scores.length; i++) {
+    var s = scores[i];
+    if (!s.log || !s.log.length) continue;
+    var count = 0;
+    var hit = false;
+    for (var j = 0; j < s.log.length; j++) {
+      var e = s.log[j];
+      if (String(e.target) === String(target)) {
+        count++;
+        if (e.type === 'single') { singles++; hit = true; break; }
+        if (e.type === 'double') { doubles++; hit = true; break; }
+        if (e.type === 'treble') { trebles++; hit = true; break; }
+        // miss: continue counting
+      }
+    }
+    if (hit) {
+      dartsPerGame.push(count);
+      totalMisses += (count - 1);
+    }
+  }
+  if (!dartsPerGame.length) return null;
+  var sum = dartsPerGame.reduce(function(a, b){ return a + b; }, 0);
+  var avg = Math.round((sum / dartsPerGame.length) * 10) / 10;
+  var best = Math.min.apply(null, dartsPerGame);
+  return {
+    games: dartsPerGame.length,
+    avg: avg,
+    best: best,
+    singles: singles,
+    doubles: doubles,
+    trebles: trebles,
+    totalMisses: totalMisses
+  };
 }
 
 function renderProgress() {
-  var pb=scores.length?Math.min.apply(null,scores.map(function(s){return s.darts;})):null;
-  var avg=scores.length?Math.round(scores.reduce(function(a,s){return a+s.darts;},0)/scores.length):null;
-  var last5=scores.length>=5?Math.min.apply(null,scores.slice(-5).map(function(s){return s.darts;})):null;
-  document.getElementById('prog-games').textContent=scores.length||'\u2014';
-  document.getElementById('prog-best').textContent=pb!==null?pb:'\u2014';
-  document.getElementById('prog-avg').textContent=avg!==null?avg:'\u2014';
-  document.getElementById('prog-last5').textContent=last5!==null?last5:'\u2014';
-  renderChart(); renderNumberGrid();
+  var pb = scores.length ? Math.min.apply(null, scores.map(function(s){ return s.darts; })) : null;
+  var avg = scores.length ? Math.round(scores.reduce(function(a,s){ return a + s.darts; }, 0) / scores.length) : null;
+  var last5 = scores.length >= 5 ? Math.min.apply(null, scores.slice(-5).map(function(s){ return s.darts; })) : null;
+  document.getElementById('prog-games').textContent = scores.length || '\u2014';
+  document.getElementById('prog-best').textContent = pb !== null ? pb : '\u2014';
+  document.getElementById('prog-avg').textContent = avg !== null ? avg : '\u2014';
+  document.getElementById('prog-last5').textContent = last5 !== null ? last5 : '\u2014';
+  renderChart();
+  renderNumberGrid();
 }
 
 function renderNumberGrid() {
-  var grid=document.getElementById('number-grid');
-  grid.innerHTML='';
-
-  // Build list of numbers that have data, sorted by avg (ascending = best)
-  var withData=NUMBERS.map(function(n){
-    var st=getNumberStats(n);
-    return st ? {n:n, avg:st.avg} : null;
-  }).filter(function(x){return x!==null;});
-
-  // Sort by avg ascending to find best/worst
-  var sorted=withData.slice().sort(function(a,b){return a.avg-b.avg;});
-  var best3=sorted.slice(0,3).map(function(x){return x.n;});
-  var worst3=sorted.slice(-3).map(function(x){return x.n;});
-
-  var allAvgs=withData.map(function(x){return x.avg;});
-  var maxAvg=allAvgs.length?Math.max.apply(null,allAvgs):1;
-
-  NUMBERS.forEach(function(n){
-    var st=getNumberStats(n), hasData=st!==null;
-    var tile=document.createElement('div');
-    var cls='number-tile'+(hasData?'':' no-data');
-
-    var isBest=hasData && withData.length>=3 && best3.indexOf(n)!==-1;
-    var isWorst=hasData && withData.length>=3 && worst3.indexOf(n)!==-1;
-    if(isBest) cls+=' tile-best';
-    if(isWorst) cls+=' tile-worst';
-
-    tile.className=cls;
-    var fillPct=hasData?Math.round((st.avg/maxAvg)*100):0;
-    tile.innerHTML=
-      '<div class="tile-num">'+(n==='Bull'?'BULL':n)+'</div>'+
-      '<div class="tile-avg">'+(hasData?st.avg+' avg':'no data')+'</div>'+
-      '<div class="tile-bar"><div class="tile-bar-fill" style="width:'+fillPct+'%"></div></div>';
-    if(hasData) tile.addEventListener('click',function(){showDetail(n);});
-    grid.appendChild(tile);
-  });
+  var grid = document.getElementById('number-grid');
+  grid.innerHTML = '';
+  var allAvgs = [];
+  for (var i = 0; i < NUMBERS.length; i++) {
+    var st = getNumberStats(NUMBERS[i]);
+    if (st) allAvgs.push(st.avg);
+  }
+  var maxAvg = allAvgs.length ? Math.max.apply(null, allAvgs) : 1;
+  for (var i = 0; i < NUMBERS.length; i++) {
+    (function(n) {
+      var st = getNumberStats(n);
+      var hasData = st !== null;
+      var tile = document.createElement('div');
+      var isActive = activeDetailNum !== null && String(activeDetailNum) === String(n);
+      tile.className = 'number-tile' + (hasData ? '' : ' no-data') + (isActive ? ' active-tile' : '');
+      var fillPct = hasData ? Math.round((st.avg / maxAvg) * 100) : 0;
+      tile.innerHTML =
+        '<div class="tile-num">' + (n === 'Bull' ? 'BULL' : n) + '</div>' +
+        '<div class="tile-avg">' + (hasData ? st.avg + ' avg' : 'no data') + '</div>' +
+        '<div class="tile-bar"><div class="tile-bar-fill" style="width:' + fillPct + '%"></div></div>';
+      if (hasData) {
+        tile.addEventListener('click', function(){ showDetail(n); });
+      }
+      grid.appendChild(tile);
+    })(NUMBERS[i]);
+  }
 }
 
 function showDetail(target) {
-  var st=getNumberStats(target);
-  if(!st) return;
-  document.getElementById('detail-title').textContent=target==='Bull'?'BULL':target;
-  document.getElementById('detail-attempts').textContent=st.attempts;
-  document.getElementById('detail-avg').textContent=st.avg;
-  document.getElementById('detail-best').textContent=st.best;
-  document.getElementById('detail-singles').textContent=st.singles;
-  document.getElementById('detail-doubles').textContent=st.doubles;
-  document.getElementById('detail-trebles').textContent=st.trebles;
-  var total=st.singles+st.doubles+st.trebles;
-  document.getElementById('detail-pct').textContent=total>0?
-    Math.round((st.singles/total)*100)+'% singles  \u00b7  '+
-    Math.round((st.doubles/total)*100)+'% doubles  \u00b7  '+
-    Math.round((st.trebles/total)*100)+'% trebles':'';
-  var panel=document.getElementById('detail-panel');
+  var st = getNumberStats(target);
+  if (!st) return;
+  activeDetailNum = target;
+  var label = target === 'Bull' ? 'BULL' : target;
+  document.getElementById('detail-title').textContent = label;
+  document.getElementById('detail-games').textContent = st.games;
+  document.getElementById('detail-avg').textContent = st.avg;
+  document.getElementById('detail-best').textContent = st.best;
+  document.getElementById('detail-singles').textContent = st.singles;
+  document.getElementById('detail-doubles').textContent = st.doubles;
+  document.getElementById('detail-trebles').textContent = st.trebles;
+  var total = st.singles + st.doubles + st.trebles;
+  var pctLine = total > 0
+    ? Math.round((st.singles / total) * 100) + '% single  \u00b7  ' +
+      Math.round((st.doubles / total) * 100) + '% double  \u00b7  ' +
+      Math.round((st.trebles / total) * 100) + '% treble'
+    : '';
+  var missLine = st.totalMisses > 0
+    ? st.totalMisses + ' total miss' + (st.totalMisses !== 1 ? 'es' : '') + ' across all games'
+    : 'No misses on this number \u2014 impressive!';
+  document.getElementById('detail-footer').innerHTML = pctLine + (pctLine ? '<br>' : '') + missLine;
+  var panel = document.getElementById('detail-panel');
   panel.classList.add('visible');
-  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  renderNumberGrid();
 }
 
-function closeDetail(){document.getElementById('detail-panel').classList.remove('visible');}
+function closeDetail() {
+  activeDetailNum = null;
+  document.getElementById('detail-panel').classList.remove('visible');
+  renderNumberGrid();
+}
 
 function renderChart() {
-  var NS='http://www.w3.org/2000/svg', svg=document.getElementById('chart-svg');
-  svg.innerHTML='';
-  var recent=scores.slice(-50);
-  if(recent.length<2){
-    var t=document.createElementNS(NS,'text');
-    t.setAttribute('x','150');t.setAttribute('y','55');t.setAttribute('text-anchor','middle');
-    t.setAttribute('fill','#888');t.setAttribute('font-size','10');t.setAttribute('font-family','IBM Plex Mono,monospace');
-    t.textContent='Play more games to see your trend';
-    svg.appendChild(t);return;
+  var NS = 'http://www.w3.org/2000/svg';
+  var svg = document.getElementById('chart-svg');
+  svg.innerHTML = '';
+  var recent = scores.slice(-50);
+  if (recent.length < 2) {
+    var t = document.createElementNS(NS, 'text');
+    t.setAttribute('x','150'); t.setAttribute('y','55'); t.setAttribute('text-anchor','middle');
+    t.setAttribute('fill','#888'); t.setAttribute('font-size','10'); t.setAttribute('font-family','IBM Plex Mono,monospace');
+    t.textContent = 'Play more games to see your trend';
+    svg.appendChild(t);
+    return;
   }
-  var vals=recent.map(function(s){return s.darts;});
-  var minV=Math.min.apply(null,vals),maxV=Math.max.apply(null,vals),range=maxV-minV||1;
-  var W=300,H=100,pad=20,n=recent.length;
-  function xOf(i){return pad+(i/(n-1))*(W-2*pad);}
-  function yOf(v){return (H-pad)-((v-minV)/range)*(H-2*pad);}
-  var defs=document.createElementNS(NS,'defs');
-  var grad=document.createElementNS(NS,'linearGradient');
-  grad.setAttribute('id','cg');grad.setAttribute('x1','0');grad.setAttribute('y1','0');grad.setAttribute('x2','0');grad.setAttribute('y2','1');
-  var s1=document.createElementNS(NS,'stop');s1.setAttribute('offset','0%');s1.setAttribute('stop-color','#cc2200');s1.setAttribute('stop-opacity','0.12');
-  var s2=document.createElementNS(NS,'stop');s2.setAttribute('offset','100%');s2.setAttribute('stop-color','#cc2200');s2.setAttribute('stop-opacity','0');
-  grad.appendChild(s1);grad.appendChild(s2);defs.appendChild(grad);svg.appendChild(defs);
-  var fp=recent.map(function(s,i){return xOf(i)+','+yOf(s.darts);}).join(' ')+' '+xOf(n-1)+','+H+' '+xOf(0)+','+H;
-  var poly=document.createElementNS(NS,'polygon');poly.setAttribute('points',fp);poly.setAttribute('fill','url(#cg)');svg.appendChild(poly);
-  var lp=recent.map(function(s,i){return xOf(i)+','+yOf(s.darts);}).join(' ');
-  var line=document.createElementNS(NS,'polyline');line.setAttribute('points',lp);line.setAttribute('fill','none');
-  line.setAttribute('stroke','#cc2200');line.setAttribute('stroke-width','2');line.setAttribute('stroke-linejoin','round');line.setAttribute('stroke-linecap','round');
+  var vals = recent.map(function(s){ return s.darts; });
+  var minV = Math.min.apply(null, vals), maxV = Math.max.apply(null, vals), range = maxV - minV || 1;
+  var W = 300, H = 100, pad = 20, n = recent.length;
+  function xOf(i){ return pad + (i / (n - 1)) * (W - 2 * pad); }
+  function yOf(v){ return (H - pad) - ((v - minV) / range) * (H - 2 * pad); }
+  var defs = document.createElementNS(NS, 'defs');
+  var grad = document.createElementNS(NS, 'linearGradient');
+  grad.setAttribute('id','cg'); grad.setAttribute('x1','0'); grad.setAttribute('y1','0'); grad.setAttribute('x2','0'); grad.setAttribute('y2','1');
+  var s1 = document.createElementNS(NS, 'stop'); s1.setAttribute('offset','0%'); s1.setAttribute('stop-color','#cc2200'); s1.setAttribute('stop-opacity','0.12');
+  var s2 = document.createElementNS(NS, 'stop'); s2.setAttribute('offset','100%'); s2.setAttribute('stop-color','#cc2200'); s2.setAttribute('stop-opacity','0');
+  grad.appendChild(s1); grad.appendChild(s2); defs.appendChild(grad); svg.appendChild(defs);
+  var fp = recent.map(function(s,i){ return xOf(i)+','+yOf(s.darts); }).join(' ') + ' ' + xOf(n-1) + ',' + H + ' ' + xOf(0) + ',' + H;
+  var poly = document.createElementNS(NS, 'polygon'); poly.setAttribute('points', fp); poly.setAttribute('fill', 'url(#cg)'); svg.appendChild(poly);
+  var lp = recent.map(function(s,i){ return xOf(i)+','+yOf(s.darts); }).join(' ');
+  var line = document.createElementNS(NS, 'polyline'); line.setAttribute('points', lp); line.setAttribute('fill', 'none');
+  line.setAttribute('stroke','#cc2200'); line.setAttribute('stroke-width','2'); line.setAttribute('stroke-linejoin','round'); line.setAttribute('stroke-linecap','round');
   svg.appendChild(line);
   var sx=0,sy=0,sxy=0,sx2=0;
-  vals.forEach(function(v,i){sx+=i;sy+=v;sxy+=i*v;sx2+=i*i;});
-  var slope=(n*sxy-sx*sy)/(n*sx2-sx*sx), intercept=(sy-slope*sx)/n;
-  var tl=document.createElementNS(NS,'line');
-  tl.setAttribute('x1',xOf(0));tl.setAttribute('y1',yOf(intercept));
-  tl.setAttribute('x2',xOf(n-1));tl.setAttribute('y2',yOf(intercept+slope*(n-1)));
-  tl.setAttribute('stroke',slope<0?'#1a9e50':'#cc2200');tl.setAttribute('stroke-width','1.5');
-  tl.setAttribute('stroke-dasharray','5,3');tl.setAttribute('opacity','0.85');
+  vals.forEach(function(v,i){ sx+=i; sy+=v; sxy+=i*v; sx2+=i*i; });
+  var slope = (n*sxy - sx*sy) / (n*sx2 - sx*sx);
+  var intercept = (sy - slope*sx) / n;
+  var tl = document.createElementNS(NS, 'line');
+  tl.setAttribute('x1', xOf(0)); tl.setAttribute('y1', yOf(intercept));
+  tl.setAttribute('x2', xOf(n-1)); tl.setAttribute('y2', yOf(intercept + slope*(n-1)));
+  tl.setAttribute('stroke', slope < 0 ? '#1a9e50' : '#cc2200');
+  tl.setAttribute('stroke-width','1.5'); tl.setAttribute('stroke-dasharray','5,3'); tl.setAttribute('opacity','0.85');
   svg.appendChild(tl);
   recent.forEach(function(s,i){
-    var c=document.createElementNS(NS,'circle');
-    c.setAttribute('cx',xOf(i));c.setAttribute('cy',yOf(s.darts));c.setAttribute('r','3');
-    c.setAttribute('fill',s.darts===minV?'#1a9e50':'#cc2200');svg.appendChild(c);
+    var c = document.createElementNS(NS, 'circle');
+    c.setAttribute('cx', xOf(i)); c.setAttribute('cy', yOf(s.darts)); c.setAttribute('r','3');
+    c.setAttribute('fill', s.darts === minV ? '#1a9e50' : '#cc2200');
+    svg.appendChild(c);
   });
-  var t1=document.createElementNS(NS,'text');t1.setAttribute('x',pad);t1.setAttribute('y',H+12);
-  t1.setAttribute('fill','#888');t1.setAttribute('font-size','8');t1.setAttribute('font-family','IBM Plex Mono,monospace');
-  t1.textContent=recent[0].date.slice(0,5);svg.appendChild(t1);
-  var t2=document.createElementNS(NS,'text');t2.setAttribute('x',W-pad);t2.setAttribute('y',H+12);
-  t2.setAttribute('fill','#888');t2.setAttribute('font-size','8');t2.setAttribute('text-anchor','end');t2.setAttribute('font-family','IBM Plex Mono,monospace');
-  t2.textContent=recent[n-1].date.slice(0,5);svg.appendChild(t2);
+  var t1 = document.createElementNS(NS, 'text'); t1.setAttribute('x',pad); t1.setAttribute('y',H+12);
+  t1.setAttribute('fill','#888'); t1.setAttribute('font-size','8'); t1.setAttribute('font-family','IBM Plex Mono,monospace');
+  t1.textContent = recent[0].date.slice(0,5); svg.appendChild(t1);
+  var t2 = document.createElementNS(NS, 'text'); t2.setAttribute('x',W-pad); t2.setAttribute('y',H+12);
+  t2.setAttribute('fill','#888'); t2.setAttribute('font-size','8'); t2.setAttribute('text-anchor','end'); t2.setAttribute('font-family','IBM Plex Mono,monospace');
+  t2.textContent = recent[n-1].date.slice(0,5); svg.appendChild(t2);
 }
 
 renderTargets();
