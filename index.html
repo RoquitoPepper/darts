@@ -232,6 +232,8 @@
         <input type="file" accept=".csv,text/csv" style="display:none" onchange="importCSV(this)">
       </label>
       <div id="import-msg" style="font-size:0.6rem;text-align:center;margin-top:6px;min-height:1em;letter-spacing:1px;"></div>
+      <div class="section-title" style="margin-top:20px">Danger zone</div>
+      <button class="btn-secondary" style="width:100%;border-color:#cc2200;color:#cc2200" onclick="clearHistory()">&#10005; Clear all history</button>
     </div>
   </div>
 </div>
@@ -850,6 +852,16 @@ function importCSV(input) {
     input.value = ''; // reset so same file can be re-selected
   };
   reader.readAsText(file);
+}
+
+function clearHistory() {
+  if (!scores.length) { alert('No history to clear.'); return; }
+  if (!confirm('Delete all ' + scores.length + ' games? This cannot be undone.')) return;
+  scores = [];
+  persistScores();
+  updateStats();
+  renderHistory();
+  renderProgress();
 }
 
 function exportCSV() {
