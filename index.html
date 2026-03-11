@@ -107,6 +107,14 @@
     .tile-bar-fill { height:100%; background:var(--red); border-radius:2px; }
     .number-tile.no-data { opacity:0.4; cursor:default; }
     .number-tile.no-data:hover { border-color:var(--bg-subtle2); }
+    .number-tile.tile-best { background:#f0f8f3 !important; border-color:#a8d9b8 !important; }
+    .number-tile.tile-best .tile-num { color:#1a9e50 !important; }
+    .number-tile.tile-best .tile-bar-fill { background:#1a9e50 !important; }
+    .number-tile.tile-worst { background:#fdf3f0 !important; border-color:#f0bfb4 !important; }
+    .number-tile.tile-worst .tile-num { color:#b32000 !important; }
+    .number-tile.tile-worst .tile-bar-fill { background:#cc2200 !important; }
+    .bar-chart-container { background:var(--bg-subtle); border:1px solid var(--bg-subtle2); border-radius:8px; padding:14px 14px 8px; margin-bottom:14px; }
+    #bar-chart-svg { width:100%; display:block; overflow:visible; }
     .detail-panel { display:none; background:var(--bg-subtle); border:2px solid var(--red); border-radius:10px; padding:16px; margin-bottom:14px; }
     .detail-panel.visible { display:block; }
     .detail-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
@@ -185,7 +193,12 @@
         <div class="chart-note">Lower is better &#183; <span style="color:var(--green-pb)">&#9679;</span> Personal best &#183; dashed = trend</div>
       </div>
       <div class="section-title">Performance by number</div>
-      <div class="grid-note">Tap a number to see details. Only shows data from games with full throw logs.</div>
+      <div class="grid-note">Avg darts to hit each number. Tap a tile for details.</div>
+      <div class="bar-chart-container">
+        <div class="chart-title">Average darts per number</div>
+        <svg id="bar-chart-svg" viewBox="0 0 300 120"></svg>
+        <div class="chart-note"><span style="color:var(--green-pb)">■</span> Best 3 &nbsp;·&nbsp; <span style="color:var(--red)">■</span> Worst 3</div>
+      </div>
       <div class="detail-panel" id="detail-panel">
         <div class="detail-header">
           <div class="detail-title" id="detail-title">1</div>
@@ -464,7 +477,99 @@ function renderProgress() {
   document.getElementById('prog-avg').textContent = avg !== null ? avg : '\u2014';
   document.getElementById('prog-last5').textContent = last5 !== null ? last5 : '\u2014';
   renderChart();
+  renderBarChart();
   renderNumberGrid();
+}
+
+function renderBarChart() {
+  var NS = 'http://www.w3.org/2000/svg';
+  var svg = document.getElementById('bar-chart-svg');
+  svg.innerHTML = '';
+
+  // Gather data
+  var data = NUMBERS.map(function(n) {
+    var st = getNumberStats(n);
+    return { n: n, avg: st ? st.avg : null };
+  });
+  var withData = data.filter(function(d){ return d.avg !== null; });
+
+  if (withData.length === 0) {
+    var t = document.createElementNS(NS, 'text');
+    t.setAttribute('x','150'); t.setAttribute('y','60'); t.setAttribute('text-anchor','middle');
+    t.setAttribute('fill','#888'); t.setAttribute('font-size','10'); t.setAttribute('font-family','IBM Plex Mono,monospace');
+    t.textContent = 'No throw data yet';
+    svg.appendChild(t);
+    return;
+  }
+
+  // Rank for colour coding
+  var sorted = withData.slice().sort(function(a,b){ return a.avg - b.avg; });
+  var best3keys = sorted.slice(0,3).map(function(d){ return String(d.n); });
+  var worst3keys = sorted.slice(-3).map(function(d){ return String(d.n); });
+  worst3keys = worst3keys.filter(function(k){ return best3keys.indexOf(k) === -1; });
+
+  var maxAvg = Math.max.apply(null, withData.map(function(d){ return d.avg; }));
+  var W = 300, H = 100, padL = 22, padB = 18, padT = 4, padR = 4;
+  var chartW = W - padL - padR;
+  var chartH = H - padB - padT;
+  var n = data.length; // always 21
+  var barW = Math.floor(chartW / n) - 2;
+
+  // Y axis gridlines
+  var steps = [1, 2, 3, 4, 5];
+  steps.forEach(function(v) {
+    if (v > maxAvg + 0.5) return;
+    var y = padT + chartH - (v / maxAvg) * chartH;
+    var gl = document.createElementNS(NS, 'line');
+    gl.setAttribute('x1', padL); gl.setAttribute('x2', W - padR);
+    gl.setAttribute('y1', y); gl.setAttribute('y2', y);
+    gl.setAttribute('stroke', '#e0e0e0'); gl.setAttribute('stroke-width', '0.5');
+    svg.appendChild(gl);
+    var tl = document.createElementNS(NS, 'text');
+    tl.setAttribute('x', padL - 3); tl.setAttribute('y', y + 3);
+    tl.setAttribute('text-anchor', 'end'); tl.setAttribute('fill', '#aaa');
+    tl.setAttribute('font-size', '7'); tl.setAttribute('font-family', 'IBM Plex Mono,monospace');
+    tl.textContent = v;
+    svg.appendChild(tl);
+  });
+
+  // Bars
+  data.forEach(function(d, i) {
+    var x = padL + i * (chartW / n) + 1;
+    var label = d.n === 'Bull' ? 'B' : d.n;
+    var isBest = d.avg !== null && withData.length >= 3 && best3keys.indexOf(String(d.n)) !== -1;
+    var isWorst = d.avg !== null && withData.length >= 3 && worst3keys.indexOf(String(d.n)) !== -1;
+    var fillCol = isBest ? '#1a9e50' : isWorst ? '#cc2200' : '#c0c0c0';
+    var fillOpacity = (isBest || isWorst) ? '1' : '0.7';
+
+    if (d.avg !== null) {
+      var barH = Math.max(2, (d.avg / maxAvg) * chartH);
+      var barY = padT + chartH - barH;
+      var rect = document.createElementNS(NS, 'rect');
+      rect.setAttribute('x', x); rect.setAttribute('y', barY);
+      rect.setAttribute('width', barW); rect.setAttribute('height', barH);
+      rect.setAttribute('fill', fillCol); rect.setAttribute('opacity', fillOpacity);
+      rect.setAttribute('rx', '1');
+      svg.appendChild(rect);
+    }
+
+    // X axis label
+    var tx = document.createElementNS(NS, 'text');
+    tx.setAttribute('x', x + barW / 2); tx.setAttribute('y', H - 4);
+    tx.setAttribute('text-anchor', 'middle'); tx.setAttribute('fill', (isBest || isWorst) ? fillCol : '#aaa');
+    tx.setAttribute('font-size', d.n === 'Bull' ? '6' : '7');
+    tx.setAttribute('font-family', 'IBM Plex Mono,monospace');
+    tx.setAttribute('font-weight', (isBest || isWorst) ? '600' : '400');
+    tx.textContent = label;
+    svg.appendChild(tx);
+  });
+
+  // Y axis line
+  var axis = document.createElementNS(NS, 'line');
+  axis.setAttribute('x1', padL); axis.setAttribute('x2', padL);
+  axis.setAttribute('y1', padT); axis.setAttribute('y2', padT + chartH);
+  axis.setAttribute('stroke', '#ccc'); axis.setAttribute('stroke-width', '0.5');
+  svg.appendChild(axis);
 }
 
 function renderNumberGrid() {
@@ -476,13 +581,31 @@ function renderNumberGrid() {
     if (st) allAvgs.push(st.avg);
   }
   var maxAvg = allAvgs.length ? Math.max.apply(null, allAvgs) : 1;
+
+  // Rank for colour coding
+  var withData = [];
+  for (var i = 0; i < NUMBERS.length; i++) {
+    var st = getNumberStats(NUMBERS[i]);
+    if (st) withData.push({ n: NUMBERS[i], avg: st.avg });
+  }
+  var sorted = withData.slice().sort(function(a,b){ return a.avg - b.avg; });
+  var best3keys = withData.length >= 3 ? sorted.slice(0,3).map(function(d){ return String(d.n); }) : [];
+  var worst3keys = withData.length >= 3 ? sorted.slice(-3).map(function(d){ return String(d.n); }) : [];
+  // Remove overlap (if fewer than 6 numbers have data, some could appear in both)
+  worst3keys = worst3keys.filter(function(k){ return best3keys.indexOf(k) === -1; });
+
   for (var i = 0; i < NUMBERS.length; i++) {
     (function(n) {
       var st = getNumberStats(n);
       var hasData = st !== null;
       var tile = document.createElement('div');
       var isActive = activeDetailNum !== null && String(activeDetailNum) === String(n);
-      tile.className = 'number-tile' + (hasData ? '' : ' no-data') + (isActive ? ' active-tile' : '');
+      var isBest = hasData && best3keys.indexOf(String(n)) !== -1;
+      var isWorst = hasData && worst3keys.indexOf(String(n)) !== -1;
+      var cls = 'number-tile' + (hasData ? '' : ' no-data') + (isActive ? ' active-tile' : '');
+      if (isBest) cls += ' tile-best';
+      if (isWorst) cls += ' tile-worst';
+      tile.className = cls;
       var fillPct = hasData ? Math.round((st.avg / maxAvg) * 100) : 0;
       tile.innerHTML =
         '<div class="tile-num">' + (n === 'Bull' ? 'BULL' : n) + '</div>' +
