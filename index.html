@@ -83,7 +83,7 @@
     .entry-details { margin-top:10px; border-top:1px solid var(--bg-subtle2); padding-top:10px; display:none; }
     .entry-details.visible { display:block; }
     .entry-comment { font-size:0.72rem; color:var(--text); font-style:italic; margin-bottom:8px; }
-    .entry-log { font-size:0.65rem; color:var(--muted); line-height:1.8; }
+    .entry-log { font-size:0.65rem; color:var(--muted); line-height:1.8; display:flex; flex-wrap:wrap; gap:2px 0; }
     .delete-btn { background:none; border:1px solid var(--red); color:var(--red); font-size:0.6rem; padding:4px 8px; border-radius:4px; cursor:pointer; margin-top:8px; font-family:'IBM Plex Mono',monospace; letter-spacing:1px; }
     .progress { padding:16px; }
     .summary-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px; }
@@ -115,6 +115,9 @@
     .number-tile.tile-worst .tile-bar-fill { background:#cc2200 !important; }
     .bar-chart-container { background:var(--bg-subtle); border:1px solid var(--bg-subtle2); border-radius:8px; padding:14px 14px 8px; margin-bottom:14px; }
     #bar-chart-svg { width:100%; display:block; overflow:visible; }
+    .bar-chart-toggles { display:flex; gap:6px; margin-bottom:10px; }
+    .bar-toggle { flex:1; padding:6px 4px; background:transparent; border:1px solid var(--bg-subtle2); border-radius:5px; color:var(--muted); font-family:'IBM Plex Mono',monospace; font-size:0.6rem; letter-spacing:1px; cursor:pointer; transition:all 0.15s; text-transform:uppercase; }
+    .bar-toggle.active { background:var(--red); border-color:var(--red); color:#fff; }
     .detail-panel { display:none; background:var(--bg-subtle); border:2px solid var(--red); border-radius:10px; padding:16px; margin-bottom:14px; }
     .detail-panel.visible { display:block; }
     .detail-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
@@ -195,9 +198,13 @@
       <div class="section-title">Performance by number</div>
       <div class="grid-note">Avg darts to hit each number. Tap a tile for details.</div>
       <div class="bar-chart-container">
-        <div class="chart-title">Average darts per number</div>
+        <div class="bar-chart-toggles">
+          <button class="bar-toggle active" onclick="setBarMode('avg')">Avg darts</button>
+          <button class="bar-toggle" onclick="setBarMode('doubles')">Doubles</button>
+          <button class="bar-toggle" onclick="setBarMode('trebles')">Trebles</button>
+        </div>
         <svg id="bar-chart-svg" viewBox="0 0 300 120"></svg>
-        <div class="chart-note"><span style="color:var(--green-pb)">■</span> Best 3 &nbsp;·&nbsp; <span style="color:var(--red)">■</span> Worst 3</div>
+        <div class="chart-note" id="bar-chart-note"><span style="color:var(--green-pb)">■</span> Best 3 &nbsp;·&nbsp; <span style="color:var(--red)">■</span> Worst 3</div>
       </div>
       <div class="detail-panel" id="detail-panel">
         <div class="detail-header">
@@ -217,6 +224,9 @@
         <div class="detail-footer" id="detail-footer"></div>
       </div>
       <div class="number-grid" id="number-grid"></div>
+      <div class="section-title" style="margin-top:20px">Export data</div>
+      <div class="grid-note">Download your game history as a CSV for analysis in Excel or Google Sheets.</div>
+      <button class="btn-primary" style="width:100%;margin-bottom:8px" onclick="exportCSV()">&#8595; Download CSV</button>
     </div>
   </div>
 </div>
@@ -254,6 +264,7 @@ var dartLog = [];
 var undoStack = [];
 var expandedId = null;
 var activeDetailNum = null;
+var barChartMode = 'avg';
 
 function showTab(name) {
   var tabs = document.querySelectorAll('.tab');
@@ -481,17 +492,39 @@ function renderProgress() {
   renderNumberGrid();
 }
 
+function setBarMode(mode) {
+  barChartMode = mode;
+  var btns = document.querySelectorAll('.bar-toggle');
+  var modes = ['avg','doubles','trebles'];
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].classList.toggle('active', modes[i] === mode);
+  }
+  var note = document.getElementById('bar-chart-note');
+  if (mode === 'avg') {
+    note.innerHTML = '<span style="color:var(--green-pb)">&#9632;</span> Best 3 &nbsp;·&nbsp; <span style="color:var(--red)">&#9632;</span> Worst 3';
+  } else {
+    note.innerHTML = 'Higher = more ' + mode + ' hit on this number';
+  }
+  renderBarChart();
+}
+
 function renderBarChart() {
   var NS = 'http://www.w3.org/2000/svg';
   var svg = document.getElementById('bar-chart-svg');
   svg.innerHTML = '';
 
-  // Gather data
+  // Gather data for current mode
   var data = NUMBERS.map(function(n) {
     var st = getNumberStats(n);
-    return { n: n, avg: st ? st.avg : null };
+    var val = null;
+    if (st) {
+      if (barChartMode === 'avg') val = st.avg;
+      else if (barChartMode === 'doubles') val = st.doubles;
+      else if (barChartMode === 'trebles') val = st.trebles;
+    }
+    return { n: n, val: val, st: st };
   });
-  var withData = data.filter(function(d){ return d.avg !== null; });
+  var withData = data.filter(function(d){ return d.val !== null && d.st !== null; });
 
   if (withData.length === 0) {
     var t = document.createElementNS(NS, 'text');
@@ -502,24 +535,36 @@ function renderBarChart() {
     return;
   }
 
-  // Rank for colour coding
-  var sorted = withData.slice().sort(function(a,b){ return a.avg - b.avg; });
-  var best3keys = sorted.slice(0,3).map(function(d){ return String(d.n); });
-  var worst3keys = sorted.slice(-3).map(function(d){ return String(d.n); });
+  var maxVal = Math.max.apply(null, withData.map(function(d){ return d.val; })) || 1;
+
+  // Colour coding — for avg: best=low, worst=high; for doubles/trebles: best=high, worst=low
+  var sorted = withData.slice().sort(function(a,b){ return a.val - b.val; });
+  var best3keys, worst3keys;
+  if (barChartMode === 'avg') {
+    best3keys = sorted.slice(0,3).map(function(d){ return String(d.n); });
+    worst3keys = sorted.slice(-3).map(function(d){ return String(d.n); });
+  } else {
+    // Higher doubles/trebles = better
+    best3keys = sorted.slice(-3).map(function(d){ return String(d.n); });
+    worst3keys = sorted.slice(0,3).map(function(d){ return String(d.n); });
+    // Only colour code if there's meaningful variation (some > 0)
+    var nonZero = withData.filter(function(d){ return d.val > 0; });
+    if (nonZero.length < 3) { best3keys = []; worst3keys = []; }
+  }
   worst3keys = worst3keys.filter(function(k){ return best3keys.indexOf(k) === -1; });
 
-  var maxAvg = Math.max.apply(null, withData.map(function(d){ return d.avg; }));
-  var W = 300, H = 100, padL = 22, padB = 18, padT = 4, padR = 4;
+  var W = 300, H = 100, padL = 26, padB = 18, padT = 4, padR = 4;
   var chartW = W - padL - padR;
   var chartH = H - padB - padT;
-  var n = data.length; // always 21
+  var n = data.length;
   var barW = Math.floor(chartW / n) - 2;
 
-  // Y axis gridlines
-  var steps = [1, 2, 3, 4, 5];
-  steps.forEach(function(v) {
-    if (v > maxAvg + 0.5) return;
-    var y = padT + chartH - (v / maxAvg) * chartH;
+  // Y axis gridlines — pick sensible steps based on max
+  var rawStep = maxVal / 4;
+  var step = rawStep < 1 ? 1 : Math.ceil(rawStep);
+  for (var v = step; v <= maxVal + step * 0.5; v += step) {
+    var y = padT + chartH - (v / maxVal) * chartH;
+    if (y < padT) break;
     var gl = document.createElementNS(NS, 'line');
     gl.setAttribute('x1', padL); gl.setAttribute('x2', W - padR);
     gl.setAttribute('y1', y); gl.setAttribute('y2', y);
@@ -529,21 +574,22 @@ function renderBarChart() {
     tl.setAttribute('x', padL - 3); tl.setAttribute('y', y + 3);
     tl.setAttribute('text-anchor', 'end'); tl.setAttribute('fill', '#aaa');
     tl.setAttribute('font-size', '7'); tl.setAttribute('font-family', 'IBM Plex Mono,monospace');
-    tl.textContent = v;
+    tl.textContent = barChartMode === 'avg' ? v.toFixed(1) : v;
     svg.appendChild(tl);
-  });
+  }
 
   // Bars
   data.forEach(function(d, i) {
     var x = padL + i * (chartW / n) + 1;
     var label = d.n === 'Bull' ? 'B' : d.n;
-    var isBest = d.avg !== null && withData.length >= 3 && best3keys.indexOf(String(d.n)) !== -1;
-    var isWorst = d.avg !== null && withData.length >= 3 && worst3keys.indexOf(String(d.n)) !== -1;
+    var hasVal = d.val !== null && d.st !== null;
+    var isBest = hasVal && withData.length >= 3 && best3keys.indexOf(String(d.n)) !== -1;
+    var isWorst = hasVal && withData.length >= 3 && worst3keys.indexOf(String(d.n)) !== -1;
     var fillCol = isBest ? '#1a9e50' : isWorst ? '#cc2200' : '#c0c0c0';
     var fillOpacity = (isBest || isWorst) ? '1' : '0.7';
 
-    if (d.avg !== null) {
-      var barH = Math.max(2, (d.avg / maxAvg) * chartH);
+    if (hasVal && d.val > 0) {
+      var barH = Math.max(2, (d.val / maxVal) * chartH);
       var barY = padT + chartH - barH;
       var rect = document.createElementNS(NS, 'rect');
       rect.setAttribute('x', x); rect.setAttribute('y', barY);
@@ -553,10 +599,10 @@ function renderBarChart() {
       svg.appendChild(rect);
     }
 
-    // X axis label
     var tx = document.createElementNS(NS, 'text');
     tx.setAttribute('x', x + barW / 2); tx.setAttribute('y', H - 4);
-    tx.setAttribute('text-anchor', 'middle'); tx.setAttribute('fill', (isBest || isWorst) ? fillCol : '#aaa');
+    tx.setAttribute('text-anchor', 'middle');
+    tx.setAttribute('fill', (isBest || isWorst) ? fillCol : '#aaa');
     tx.setAttribute('font-size', d.n === 'Bull' ? '6' : '7');
     tx.setAttribute('font-family', 'IBM Plex Mono,monospace');
     tx.setAttribute('font-weight', (isBest || isWorst) ? '600' : '400');
@@ -564,7 +610,6 @@ function renderBarChart() {
     svg.appendChild(tx);
   });
 
-  // Y axis line
   var axis = document.createElementNS(NS, 'line');
   axis.setAttribute('x1', padL); axis.setAttribute('x2', padL);
   axis.setAttribute('y1', padT); axis.setAttribute('y2', padT + chartH);
@@ -705,6 +750,60 @@ function renderChart() {
   var t2 = document.createElementNS(NS, 'text'); t2.setAttribute('x',W-pad); t2.setAttribute('y',H+12);
   t2.setAttribute('fill','#888'); t2.setAttribute('font-size','8'); t2.setAttribute('text-anchor','end'); t2.setAttribute('font-family','IBM Plex Mono,monospace');
   t2.textContent = recent[n-1].date.slice(0,5); svg.appendChild(t2);
+}
+
+function exportCSV() {
+  if (!scores.length) { alert('No games to export yet.'); return; }
+
+  // ── Sheet 1: Games summary ─────────────────────────────
+  var gameRows = [['game_id','date','time','total_darts','comment']];
+  scores.forEach(function(s) {
+    gameRows.push([
+      s.id,
+      '"' + s.date + '"',
+      '"' + s.time + '"',
+      s.darts,
+      '"' + (s.comment || '').replace(/"/g, '""') + '"'
+    ]);
+  });
+
+  // ── Sheet 2: Throw-level detail ────────────────────────
+  var throwRows = [['game_id','date','time','throw_number','target','result']];
+  scores.forEach(function(s) {
+    if (!s.log || !s.log.length) return;
+    s.log.forEach(function(e) {
+      throwRows.push([
+        s.id,
+        '"' + s.date + '"',
+        '"' + s.time + '"',
+        e.dartNum,
+        '"' + e.target + '"',
+        e.type
+      ]);
+    });
+  });
+
+  // Combine into one CSV with a blank row separator and section headers
+  var lines = [];
+  lines.push('GAMES SUMMARY');
+  gameRows.forEach(function(r) { lines.push(r.join(',')); });
+  lines.push('');
+  lines.push('THROW DETAIL');
+  throwRows.forEach(function(r) { lines.push(r.join(',')); });
+
+  var csv = lines.join('\r\n');
+  var blob = new Blob([csv], { type: 'text/csv' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  var now = new Date();
+  a.download = 'rtw-darts-' + now.getFullYear() + '-' +
+    String(now.getMonth()+1).padStart(2,'0') + '-' +
+    String(now.getDate()).padStart(2,'0') + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 renderTargets();
