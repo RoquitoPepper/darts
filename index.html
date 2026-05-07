@@ -40,7 +40,7 @@
     .stat-lbl { font-size:0.55rem; letter-spacing:2px; color:var(--muted); margin-top:2px; text-transform:uppercase; }
     .dart-panel { background:var(--bg-subtle); border:2px solid var(--bg-subtle2); border-radius:8px; padding:16px; margin-bottom:14px; }
     .panel-label { font-size:0.6rem; letter-spacing:3px; color:var(--muted); text-transform:uppercase; margin-bottom:10px; }
-    .current-target-display { font-family:'Bebas Neue',sans-serif; font-size:3rem; color:var(--red); line-height:1; margin-bottom:4px; }
+    .current-target-display { font-family:'Bebas Neue',sans-serif; font-size:4.5rem; color:var(--red); line-height:1; margin-bottom:4px; }
     .throw-buttons { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:8px; margin-bottom:8px; }
     .throw-btn { padding:16px 4px; border:2px solid; border-radius:6px; font-family:'IBM Plex Mono',monospace; font-size:0.7rem; font-weight:600; letter-spacing:1px; cursor:pointer; transition:all 0.15s; text-transform:uppercase; }
     .throw-btn:active { transform:scale(0.94); }
@@ -96,6 +96,7 @@
     .chart-title { font-size:0.6rem; letter-spacing:3px; color:var(--muted); text-transform:uppercase; margin-bottom:12px; }
     .chart-note { font-size:0.6rem; color:var(--muted); margin-top:8px; }
     #chart-svg { width:100%; overflow:visible; display:block; }
+    .chart-tooltip { pointer-events:none; }
     .section-title { font-size:0.6rem; letter-spacing:3px; color:var(--muted); text-transform:uppercase; margin:14px 0 8px; }
     .grid-note { font-size:0.58rem; color:var(--muted); margin-bottom:12px; }
     .number-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:8px; }
@@ -769,9 +770,64 @@ function renderChart() {
   svg.appendChild(tl);
   recent.forEach(function(s,i){
     var c = document.createElementNS(NS, 'circle');
-    c.setAttribute('cx', xOf(i)); c.setAttribute('cy', yOf(s.darts)); c.setAttribute('r','3');
+    c.setAttribute('cx', xOf(i)); c.setAttribute('cy', yOf(s.darts)); c.setAttribute('r','5');
     c.setAttribute('fill', s.darts === minV ? '#1a9e50' : '#cc2200');
+    c.setAttribute('opacity', '0');
+    c.style.cursor = 'pointer';
     svg.appendChild(c);
+    var dot = document.createElementNS(NS, 'circle');
+    dot.setAttribute('cx', xOf(i)); dot.setAttribute('cy', yOf(s.darts)); dot.setAttribute('r','3');
+    dot.setAttribute('fill', s.darts === minV ? '#1a9e50' : '#cc2200');
+    dot.style.cursor = 'pointer';
+    svg.appendChild(dot);
+    // Tooltip handler
+    var tipX = xOf(i), tipY = yOf(s.darts);
+    function makeTapHandler(score, tx, ty) {
+      return function(e) {
+        e.stopPropagation();
+        // Remove existing tooltip
+        var old = svg.querySelector('.chart-tooltip');
+        if (old) svg.removeChild(old);
+        var g = document.createElementNS(NS, 'g');
+        g.setAttribute('class', 'chart-tooltip');
+        var label = score.darts + ' darts · ' + score.date;
+        // Position: flip to left if near right edge
+        var rectX = tx + 6;
+        var anchor = 'start';
+        if (tx > W - 80) { rectX = tx - 6; anchor = 'end'; }
+        // Clamp above if dot is near top
+        var rectY = ty - 22;
+        if (rectY < 4) rectY = ty + 8;
+        var bg = document.createElementNS(NS, 'rect');
+        bg.setAttribute('x', anchor === 'start' ? rectX - 4 : rectX - label.length * 5.2);
+        bg.setAttribute('y', rectY - 10);
+        bg.setAttribute('width', label.length * 5.2 + 10);
+        bg.setAttribute('height', 14);
+        bg.setAttribute('rx', '3');
+        bg.setAttribute('fill', '#1a1a1a');
+        bg.setAttribute('opacity', '0.85');
+        var txt = document.createElementNS(NS, 'text');
+        txt.setAttribute('x', rectX);
+        txt.setAttribute('y', rectY);
+        txt.setAttribute('text-anchor', anchor);
+        txt.setAttribute('fill', '#fff');
+        txt.setAttribute('font-size', '10');
+        txt.setAttribute('font-family', 'IBM Plex Mono,monospace');
+        txt.textContent = label;
+        g.appendChild(bg); g.appendChild(txt);
+        svg.appendChild(g);
+        // Dismiss on next tap anywhere
+        setTimeout(function() {
+          svg.addEventListener('click', function dismiss() {
+            var t = svg.querySelector('.chart-tooltip');
+            if (t) svg.removeChild(t);
+            svg.removeEventListener('click', dismiss);
+          });
+        }, 10);
+      };
+    }
+    c.addEventListener('click', makeTapHandler(s, tipX, tipY));
+    dot.addEventListener('click', makeTapHandler(s, tipX, tipY));
   });
   var t1 = document.createElementNS(NS, 'text'); t1.setAttribute('x',pad); t1.setAttribute('y',H+12);
   t1.setAttribute('fill','#888'); t1.setAttribute('font-size','8'); t1.setAttribute('font-family','IBM Plex Mono,monospace');
