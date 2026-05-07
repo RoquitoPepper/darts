@@ -180,7 +180,7 @@
         <button class="btn-primary btn-start" onclick="startGame()" id="start-btn">Start Game</button>
       </div>
       <div class="action-row" id="abandon-row" style="display:none">
-        <button class="btn-secondary" onclick="abandonGame()">Abandon Game</button>
+        <button class="btn-secondary" style="border-color:#cc2200;color:#cc2200" onclick="confirmAbandon()">Abandon Game</button>
       </div>
     </div>
   </div>
@@ -350,6 +350,12 @@ function resetGameState() {
   document.getElementById('undo-wrap').style.display = 'none';
   renderTargets();
   updateStats();
+}
+
+function confirmAbandon() {
+  showConfirm('Abandon this game? All progress will be lost.', 'Abandon', function() {
+    abandonGame();
+  });
 }
 
 function abandonGame() { resetGameState(); }
